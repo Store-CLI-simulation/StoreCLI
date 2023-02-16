@@ -13,6 +13,24 @@ trait ClientTrait {
     fn deposit_balance(&mut self, count: usize);
 }
 
+trait ProductDBTrait {
+    type ProductTraitType: ProductTrait;
+
+    fn add_product(&mut self, product: &<Self as ProductDBTrait>::ProductTraitType) -> usize;
+    fn remove_product(&mut self, id: usize);
+    fn update_product(&mut self, new_product: &<Self as ProductDBTrait>::ProductTraitType, id: usize);
+    fn get_product(&self, id: usize) -> <Self as ProductDBTrait>::ProductTraitType;
+}
+
+trait AdminTrait where Self: ClientTrait{
+    type ProductTraitType: ProductTrait;
+
+    fn add_product(&mut self, product: &<Self as AdminTrait>::ProductTraitType) -> usize;
+    fn remove_product(&mut self, id: usize);
+    fn update_product(&mut self, new_product: &<Self as AdminTrait>::ProductTraitType, id: usize);
+    fn get_product(&self, id: usize) -> <Self as AdminTrait>::ProductTraitType;
+}
+
 trait OrderTrait {
     fn get_products(&self) -> dyn BasketTrait;
 }
