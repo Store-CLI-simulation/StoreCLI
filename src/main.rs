@@ -1,4 +1,6 @@
+mod product;
 use std::io;
+
 
 trait ClientTrait {
     type OrderTraitType;
