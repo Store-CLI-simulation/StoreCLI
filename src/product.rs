@@ -1,8 +1,8 @@
 use crate::ProductTrait;
-
-struct Product {
-    title: String,
-    cost: f32
+#[derive(Clone)]
+pub struct Product {
+    pub title: String,
+    pub cost: f32
 }
 
 impl ProductTrait for Product {
