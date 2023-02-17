@@ -58,7 +58,7 @@ fn main() {
     loop {
         println!(">>>");
         io::stdin().read_line(&mut buffer).unwrap();
-        println!("{0}", buffer.trim());
+        println!("{0}", cmd);
         // println!("endl");
 
         // deposit value - пополнить баланс на value
@@ -72,7 +72,7 @@ fn main() {
         // db_edit_product title - запуск подпрограммы редактирования продукта по title
         let mut whitespace = buffer.split_whitespace();
         let cmd = whitespace.next().unwrap().to_string();
-        if buffer.trim() == "login".to_string() {
+        if cmd == "login".to_string() {
             let mut login: String = String::new();
             let mut password: String = String::new();
             println!("login:");
@@ -82,7 +82,7 @@ fn main() {
             user = Client::new_loginned(login, password, "database.db".to_string());
             println!("loginned!!!");
         }
-        else if buffer.trim() == "op".to_string() {
+        else if cmd == "op".to_string() {
             println!("opping");
             if user.is_loginned {
                 user.is_admin = true;
@@ -91,11 +91,11 @@ fn main() {
                 println!("Login first, please");
             }
         }
-        else if buffer.trim() == "unlogin".to_string() {
+        else if cmd == "unlogin".to_string() {
             if user.is_loginned {user = Client::new("database.db".to_string());}
             else {println!("Login first, please")};
         }
-        else if buffer.trim() == "exit".to_string() {
+        else if cmd == "exit".to_string() {
             break;
         }
         else if cmd == "deposit".to_string() {
