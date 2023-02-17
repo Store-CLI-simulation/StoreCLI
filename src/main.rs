@@ -60,6 +60,18 @@ fn main() {
         io::stdin().read_line(&mut buffer).unwrap();
         println!("{0}", buffer.trim());
         // println!("endl");
+
+        // deposit value - пополнить баланс на value
+        // add_product title - Добавить продукт title в корзину
+        // delete_product title - Убрать продукт title из корзины
+        // order_products - заказать товары из корзины
+        // get_ordering_history - получить историю заказов
+        // админ:
+        // db_add_product title cost - добавить продукт в базу данных
+        // db_delete_product title - стереть продукт из базы данных
+        // db_edit_product title - запуск подпрограммы редактирования продукта по title
+        let mut whitespace = buffer.split_whitespace();
+        let cmd = whitespace.next().unwrap().to_string();
         if buffer.trim() == "login".to_string() {
             let mut login: String = String::new();
             let mut password: String = String::new();
@@ -85,6 +97,32 @@ fn main() {
         }
         else if buffer.trim() == "exit".to_string() {
             break;
+        }
+        else if cmd == "deposit".to_string() {
+            
+        }
+        else if cmd == "add_product".to_string() {
+            
+        }
+        else if cmd == "delete_product".to_string() {
+            
+        }
+        else if cmd == "order_products".to_string() {
+            
+        }
+        else if cmd == "get_ordering_history".to_string() {
+            
+        }
+        if user.is_admin {
+            if cmd == "db_add_product".to_string() {
+            
+            }
+            else if cmd == "db_delete_product".to_string() {
+            
+            }
+            else if cmd == "db_edit_product".to_string() {
+            
+            }
         }
         buffer = "".to_string();
     }
