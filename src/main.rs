@@ -5,7 +5,7 @@ pub(crate) mod basket;
 pub(crate) mod product_db;
 use std::io;
 use client::Client;
-
+use std::str::FromStr;
 trait ClientTrait {
     type OrderTraitType;
     fn login(&mut self, login: String, password: String);
@@ -97,7 +97,13 @@ fn main() {
             break;
         }
         else if cmd == "deposit".to_string() {
-            
+            if !user.is_loginned {println!("Login first,please");}
+            else {
+                user.deposit_balance(
+                f32::from_str(whitespace.next().unwrap()).unwrap()
+                );
+            }
+
         }
         else if cmd == "add_product".to_string() {
             
