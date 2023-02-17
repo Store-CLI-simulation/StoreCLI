@@ -58,8 +58,6 @@ fn main() {
     loop {
         println!(">>>");
         io::stdin().read_line(&mut buffer).unwrap();
-        println!("{0}", cmd);
-        // println!("endl");
 
         // deposit value - пополнить баланс на value
         // add_product title - Добавить продукт title в корзину
