@@ -58,9 +58,19 @@ fn main() {
     loop {
         println!(">>>");
         io::stdin().read_line(&mut buffer).unwrap();
-        println!("{0}", buffer.trim());
-        // println!("endl");
-        if buffer.trim() == "login".to_string() {
+
+        // deposit value - пополнить баланс на value
+        // add_product title - Добавить продукт title в корзину
+        // delete_product title - Убрать продукт title из корзины
+        // order_products - заказать товары из корзины
+        // get_ordering_history - получить историю заказов
+        // админ:
+        // db_add_product title cost - добавить продукт в базу данных
+        // db_delete_product title - стереть продукт из базы данных
+        // db_edit_product title - запуск подпрограммы редактирования продукта по title
+        let mut whitespace = buffer.split_whitespace();
+        let cmd = whitespace.next().unwrap().to_string();
+        if cmd == "login".to_string() {
             let mut login: String = String::new();
             let mut password: String = String::new();
             println!("login:");
@@ -70,7 +80,7 @@ fn main() {
             user = Client::new_loginned(login, password, "database.db".to_string());
             println!("loginned!!!");
         }
-        else if buffer.trim() == "op".to_string() {
+        else if cmd == "op".to_string() {
             println!("opping");
             if user.is_loginned {
                 user.is_admin = true;
@@ -79,12 +89,38 @@ fn main() {
                 println!("Login first, please");
             }
         }
-        else if buffer.trim() == "unlogin".to_string() {
+        else if cmd == "unlogin".to_string() {
             if user.is_loginned {user = Client::new("database.db".to_string());}
             else {println!("Login first, please")};
         }
-        else if buffer.trim() == "exit".to_string() {
+        else if cmd == "exit".to_string() {
             break;
+        }
+        else if cmd == "deposit".to_string() {
+            
+        }
+        else if cmd == "add_product".to_string() {
+            
+        }
+        else if cmd == "delete_product".to_string() {
+            
+        }
+        else if cmd == "order_products".to_string() {
+            
+        }
+        else if cmd == "get_ordering_history".to_string() {
+            
+        }
+        if user.is_admin {
+            if cmd == "db_add_product".to_string() {
+            
+            }
+            else if cmd == "db_delete_product".to_string() {
+            
+            }
+            else if cmd == "db_edit_product".to_string() {
+            
+            }
         }
         buffer = "".to_string();
     }
