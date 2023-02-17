@@ -100,6 +100,7 @@ fn main() {
             
         }
         else if cmd == "add_product".to_string() {
+            let product_title: String = whitespace.next().unwrap().to_string();
             
         }
         else if cmd == "delete_product".to_string() {
