@@ -1,3 +1,4 @@
+use crate::product_storage::ProductStorage;
 use crate::{AdminTrait, ClientTrait, ProductDBTrait};
 use crate::order::Order;
 use crate::product::Product as CLIProduct;
@@ -74,8 +75,9 @@ impl ClientTrait for Client {
 
 impl AdminTrait for Client {
     type ProductTraitType = CLIProduct;
+    type ProductStorageTraitType = ProductStorage;
 
-    fn add_product(&mut self, product: &<Self as AdminTrait>::ProductTraitType) -> usize {
+    fn add_product(&mut self, product: &<Self as AdminTrait>::ProductStorageTraitType) -> usize {
         if !self.is_admin {
             return 0;
         }
@@ -89,14 +91,14 @@ impl AdminTrait for Client {
         self.product_db.remove_product(id);
     }
 
-    fn update_product(&mut self, new_product: &<Self as AdminTrait>::ProductTraitType, id: usize) {
+    fn update_product(&mut self, new_product: &<Self as AdminTrait>::ProductStorageTraitType, id: usize) {
         if !self.is_admin {
             return;
         }
         self.product_db.update_product(new_product, id);
     }
 
-    fn get_product(&self, id: usize) -> Option<CLIProduct> {
+    fn get_product(&self, id: usize) -> Option<ProductStorage> {
         if !self.is_admin {
             return None;
         }
