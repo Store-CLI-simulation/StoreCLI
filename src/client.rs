@@ -6,7 +6,7 @@ use crate::product_db::ProductDB;
 pub struct Client {
     pub is_loginned: bool,
     pub is_admin: bool,
-    balance: f32,
+    pub balance: f32,
     login: String,
     password: String,
     order_hystory: Vec<Order>,

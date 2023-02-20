@@ -6,7 +6,7 @@ pub(crate) mod product_db;
 use std::io;
 use basket::Basket;
 use client::Client;
-
+use std::str::FromStr;
 trait ClientTrait {
     type OrderTraitType;
     fn login(&mut self, login: String, password: String);
@@ -99,7 +99,14 @@ fn main() {
             break;
         }
         else if cmd == "deposit".to_string() {
-            
+            if !user.is_loginned {println!("Login first,please");}
+            else {
+                user.deposit_balance(
+                f32::from_str(whitespace.next().unwrap()).unwrap()
+                );
+                println!("{}", user.balance);
+            }
+
         }
         else if cmd == "add_product".to_string() {
             let product_title: String = whitespace.next().unwrap().to_string();
@@ -108,7 +115,28 @@ fn main() {
             basket.add_product(user.get_product_db().get_product(product_uid));
         }
         else if cmd == "delete_product".to_string() {
-            
+            if !user.is_loginned{
+                println!("Please, login first!");
+                buffer = "".to_string();
+                continue;
+            }
+            let title: String = whitespace.next().unwrap().to_string();
+            for product_id in 0..basket.get_product_count() {
+                if basket.get_product(product_id).get_title() == title {
+                    basket.delete_product(product_id);
+                    break;
+                }
+            }
+        }
+        else if cmd == "get_products".to_string() {
+            if !user.is_loginned{
+                println!("Please, login first!");
+                buffer = "".to_string();
+                continue;
+            }
+            for product_id in 0..basket.get_product_count() {
+                println!("{0} \tcost: {1}", basket.get_product(product_id).get_title(), basket.get_product(product_id).get_cost());
+            }
         }
         else if cmd == "order_products".to_string() {
             
