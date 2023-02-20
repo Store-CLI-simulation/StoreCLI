@@ -109,7 +109,10 @@ fn main() {
 
         }
         else if cmd == "add_product".to_string() {
+            let product_title: String = whitespace.next().unwrap().to_string();
+            let product_uid: usize = user.get_product_db().get_uid_by_title(product_title);
             
+            basket.add_product(user.get_product_db().get_product(product_uid));
         }
         else if cmd == "delete_product".to_string() {
             if !user.is_loginned{
