@@ -170,7 +170,9 @@ fn main() {
                 println!("Product added!\nUID: {uid}");
             }
             else if cmd == "db_delete_product".to_string() {
-            
+                let title = whitespace.next().unwrap().to_string();
+                let uid: usize = user.get_product_db().get_uid_by_title(title);
+                user.remove_product(uid);
             }
             else if cmd == "db_edit_product".to_string() {
             
