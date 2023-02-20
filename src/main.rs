@@ -73,7 +73,7 @@ fn main() {
     let mut last_output: String = "".to_string();
     println!("{0}[H{0}[J", 27 as char);
     loop {
-        print!("[{}]", username);
+        print!("[{} {}$]", username, user.get_balance());
         println!("{}", if user.is_admin {"[ADMIN]"} else {""});
         println!("{}", last_output);
         io::stdin().read_line(&mut buffer).unwrap();
@@ -123,7 +123,7 @@ fn main() {
                 continue;
             }
             user.deposit_balance(f32::from_str(whitespace.next().unwrap()).unwrap());
-            println!("Balance now: {}", user.get_balance());
+            last_output = format!("Balance now: {}$", user.get_balance()).to_string();
         }
         else if cmd == "get_balance".to_string() {
             if !user.is_loginned {
@@ -131,7 +131,7 @@ fn main() {
                 buffer = "".to_string();
                 continue;
             }
-            println!("Balance: {}$", user.get_balance());
+            last_output = format!("Balance now: {}$", user.get_balance()).to_string();
         }
         else if cmd == "add_product".to_string() {
             if !user.is_loginned{
@@ -166,9 +166,9 @@ fn main() {
                 buffer = "".to_string();
                 continue;
             }
+            last_output = "".to_string();
             for product_id in 0..basket.get_storage_count() {
-                last_output = "".to_string();
-                last_output = format!("{0}\n{1} \tcost: {2}$", last_output,
+                last_output = format!("{0}{1} \tcost: {2}$\n", last_output,
                     basket.get_storage(product_id).get_product().get_title(),
                     basket.get_storage(product_id).get_product().get_cost()).to_string();
             }
@@ -182,10 +182,18 @@ fn main() {
                 user.place_an_order(basket.clone());
                 user.pay(total_cost);
                 for id in 0..basket.get_storage_count() {
-                    user.get_product(
-                        user.get_product_db().get_uid_by_title(
-                            basket.get_storage(id).get_product().get_title()
-                        )).unwrap().count -= basket.get_storage(id).get_count();
+                    println!("{id:?}");
+                    let storage_0 = basket.get_storage(id);
+                    println!("{:?}", storage_0);
+                    let uid = user.get_product_db().get_uid_by_title(
+                        storage_0.get_product().get_title()
+                    );
+                    let mut storage: ProductStorage = match user.get_product(uid) {
+                        Some(value) => value,
+                        None => panic!("uid: {uid:?}"),
+                    };
+                    storage.count -= basket.get_storage(id).get_count();
+                    user.update_product(&storage.clone(), uid);
                 }
                 last_output = "Order placed".to_string();
             }
@@ -194,7 +202,18 @@ fn main() {
             }
         }
         else if cmd == "get_ordering_history".to_string() {
-            
+            let hystory: Vec<order::Order> = user.get_order_hystory();
+            last_output = "".to_string();
+            for order in hystory {
+                let basket: Basket = order.products;
+
+                let mut total_cost: f32 = 0.0;
+                for id in 0..basket.get_storage_count() {
+                    total_cost += basket.get_storage(id).get_count() * basket.get_storage(id).get_product().get_cost();
+                }
+                last_output = format!("{0}cost: {1}$\n", last_output, total_cost);
+                // panic!("{last_output}");
+            }
         }
         if user.is_admin {
             if cmd == "db_add_product".to_string() {

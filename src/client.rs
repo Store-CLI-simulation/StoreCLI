@@ -104,9 +104,6 @@ impl AdminTrait for Client {
     }
 
     fn get_product(&self, id: usize) -> Option<ProductStorage> {
-        if !self.is_admin {
-            return None;
-        }
         return Some(self.product_db.get_product(id));
     }
 }
