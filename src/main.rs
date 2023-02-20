@@ -7,6 +7,8 @@ use std::io;
 use basket::Basket;
 use client::Client;
 use std::str::FromStr;
+
+use crate::product::Product;
 trait ClientTrait {
     type OrderTraitType;
     fn login(&mut self, login: String, password: String);
@@ -159,7 +161,13 @@ fn main() {
         }
         if user.is_admin {
             if cmd == "db_add_product".to_string() {
-            
+                let title: String = whitespace.next().unwrap().to_string();
+                let cost: f32 = f32::from_str(whitespace.next().unwrap()).unwrap();
+
+                let new_product = Product { title, cost };
+
+                let uid = user.add_product(&new_product);
+                println!("Product added!\nUID: {uid}");
             }
             else if cmd == "db_delete_product".to_string() {
             
