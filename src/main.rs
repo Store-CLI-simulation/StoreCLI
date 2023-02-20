@@ -3,6 +3,7 @@ pub(crate) mod client;
 pub(crate) mod order;
 pub(crate) mod basket;
 pub(crate) mod product_db;
+pub(crate) mod product_storage;
 use std::io;
 use basket::Basket;
 use client::Client;
@@ -49,7 +50,12 @@ trait ProductTrait {
     fn get_title(&self) -> String;
     fn get_cost(&self) -> f32;
 }
+trait ProductStorageTrait {
+    type ProductTraitType: ProductTrait;
 
+    fn get_product(&self) -> <Self as ProductStorageTrait>::ProductTraitType;
+    fn get_count(&self) -> usize;
+}
 trait BasketTrait {
     type ProductTraitType: ProductTrait;
     fn add_product(&mut self, product: <Self as BasketTrait>::ProductTraitType) -> usize;
