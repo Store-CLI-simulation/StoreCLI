@@ -102,6 +102,7 @@ fn main() {
                 user.deposit_balance(
                 f32::from_str(whitespace.next().unwrap()).unwrap()
                 );
+                println!("{}", user.balance);
             }
 
         }
