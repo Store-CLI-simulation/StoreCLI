@@ -6,7 +6,7 @@ use crate::product_db::ProductDB;
 pub struct Client {
     pub is_loginned: bool,
     pub is_admin: bool,
-    pub balance: f32,
+    balance: f32,
     login: String,
     password: String,
     order_hystory: Vec<Order>,
@@ -65,6 +65,10 @@ impl ClientTrait for Client {
 
     fn deposit_balance(&mut self, count: f32) {
         self.balance += count;
+    }
+
+    fn get_balance(&self) -> f32 {
+        return self.balance;
     }
 }
 

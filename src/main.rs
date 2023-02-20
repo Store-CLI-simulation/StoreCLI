@@ -16,6 +16,7 @@ trait ClientTrait {
     fn get_order_hystory(&self) -> Vec<Self::OrderTraitType>;
 
     fn deposit_balance(&mut self, count: f32);
+    fn get_balance(&self) -> f32;
 }
 
 trait ProductDBTrait {
@@ -99,16 +100,28 @@ fn main() {
             break;
         }
         else if cmd == "deposit".to_string() {
-            if !user.is_loginned {println!("Login first,please");}
-            else {
-                user.deposit_balance(
-                f32::from_str(whitespace.next().unwrap()).unwrap()
-                );
-                println!("{}", user.balance);
+            if !user.is_loginned {
+                println!("Login first,please");
+                buffer = "".to_string();
+                continue;
             }
-
+            user.deposit_balance(f32::from_str(whitespace.next().unwrap()).unwrap());
+            println!("Balance now: {}", user.get_balance());
+        }
+        else if cmd == "get_balance".to_string() {
+            if !user.is_loginned {
+                println!("Login first,please");
+                buffer = "".to_string();
+                continue;
+            }
+            println!("Balance: {}", user.get_balance());
         }
         else if cmd == "add_product".to_string() {
+            if !user.is_loginned{
+                println!("Please, login first!");
+                buffer = "".to_string();
+                continue;
+            }
             let product_title: String = whitespace.next().unwrap().to_string();
             let product_uid: usize = user.get_product_db().get_uid_by_title(product_title);
             
