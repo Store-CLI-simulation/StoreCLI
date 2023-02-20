@@ -1,5 +1,5 @@
 use crate::ProductTrait;
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Product {
     pub title: String,
     pub cost: f32

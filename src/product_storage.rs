@@ -2,7 +2,7 @@ use std::ops::{Sub, Add};
 
 use crate::{ProductStorageTrait, product::Product};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ProductStorage {
     pub(crate) product: Product,
     pub(crate) count: f32
