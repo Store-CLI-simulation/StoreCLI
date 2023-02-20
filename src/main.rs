@@ -4,6 +4,7 @@ pub(crate) mod order;
 pub(crate) mod basket;
 pub(crate) mod product_db;
 use std::io;
+use basket::Basket;
 use client::Client;
 
 trait ClientTrait {
@@ -54,6 +55,7 @@ trait BasketTrait {
 
 fn main() {
     let mut user: Client = Client::new("database.db".to_string());
+    let mut basket: Basket = Basket::new();
     let mut buffer = String::new();
     loop {
         println!(">>>");
@@ -101,7 +103,9 @@ fn main() {
         }
         else if cmd == "add_product".to_string() {
             let product_title: String = whitespace.next().unwrap().to_string();
+            let product_uid: usize = user.get_product_db().get_uid_by_title(product_title);
             
+            basket.add_product(user.get_product_db().get_product(product_uid));
         }
         else if cmd == "delete_product".to_string() {
             

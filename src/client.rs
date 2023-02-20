@@ -36,6 +36,9 @@ impl Client {
             product_db: ProductDB::new(filepath)
         }
     }
+    pub fn get_product_db(&self) -> ProductDB {
+        return self.product_db.clone();
+    }
 }
 
 impl ClientTrait for Client {

@@ -2,13 +2,19 @@ use rusqlite::Connection;
 
 use crate::{ProductDBTrait, product::Product as CLIProduct, ProductTrait};
 
+
 pub struct ProductDB {
+    filepath: String,
     connection: Connection
 }
-
+impl Clone for ProductDB {
+    fn clone(&self) -> Self {
+        return ProductDB::new(self.filepath.clone());
+    }
+}
 impl ProductDB {
     pub fn new(filepath: String) -> Self {
-        let product_db: ProductDB = ProductDB { connection: Connection::open(filepath).unwrap() };
+        let product_db: ProductDB = ProductDB { filepath: filepath.clone(), connection: Connection::open(filepath).unwrap() };
         // product_db.connection = Connection::open(filepath).unwrap();
 
         product_db.connection
@@ -22,6 +28,9 @@ impl ProductDB {
             .unwrap();
 
         return product_db;
+    }
+    pub fn get_uid_by_title(&self, title: String) -> usize {
+        return self.connection.query_row("SELECT uid FROM `Products` WHERE title=?", [title, ], |row| {return row.get(0)}).unwrap();
     }
 }
 

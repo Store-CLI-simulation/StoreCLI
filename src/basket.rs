@@ -5,7 +5,11 @@ use crate::product::Product as CLIProduct;
 pub struct Basket {
     products: Vec<CLIProduct>
 }
-
+impl Basket {
+    pub fn new() -> Basket {
+        Basket { products: vec![] }
+    }
+}
 impl BasketTrait for Basket {
     type ProductTraitType = CLIProduct;
 
