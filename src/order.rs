@@ -4,7 +4,7 @@ use crate::product::Product;
 
 #[derive(Clone)]
 pub struct Order {
-    products: Basket
+    pub products: Basket
 }
 
 

@@ -10,10 +10,10 @@ impl Basket {
     pub fn new () -> Basket {
         Basket { products:  vec![] }
     }
-    pub fn get_product_count(&self) -> usize {
+    pub fn get_storage_count(&self) -> usize {
         self.products.len()
     }
-    pub fn get_product(&self, id:usize) -> ProductStorage {
+    pub fn get_storage(&self, id:usize) -> ProductStorage {
         self.products[id].clone()
     } 
 }

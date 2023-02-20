@@ -1,3 +1,4 @@
+use crate::basket::Basket;
 use crate::product_storage::ProductStorage;
 use crate::{AdminTrait, ClientTrait, ProductDBTrait};
 use crate::order::Order;
@@ -40,11 +41,14 @@ impl Client {
     pub fn get_product_db(&self) -> ProductDB {
         return self.product_db.clone();
     }
+    pub fn pay(&mut self, cost: f32) {
+        self.balance -= cost;
+    }
 }
 
 impl ClientTrait for Client {
     type OrderTraitType = Order;
-
+    type BasketTraitType = Basket;
     fn login(&mut self, login: String, password: String) {
         self.login = login;
         self.password = password;
@@ -56,8 +60,9 @@ impl ClientTrait for Client {
         self.is_loginned = false;
     }
 
-    fn place_an_order(&self) -> Self::OrderTraitType {
-        todo!()
+    fn place_an_order(&mut self, basket: Basket) {
+        let order: Order = Order{products: basket};
+        self.order_hystory.push(order);
     }
 
     fn get_order_hystory(&self) -> Vec<Self::OrderTraitType> {
