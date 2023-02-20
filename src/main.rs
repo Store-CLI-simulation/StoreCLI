@@ -66,27 +66,18 @@ trait BasketTrait {
 }
 
 fn main() {
+    println!("{0}[H{0}[J", 27 as char);
     let mut user: Client = Client::new("database.db".to_string());
     let mut username: String = "".to_string();
     let mut basket: Basket = Basket::new();
     let mut buffer = String::new();
     let mut last_output: String = "".to_string();
-    println!("{0}[H{0}[J", 27 as char);
     loop {
         print!("[{} {}$]", username, user.get_balance());
         println!("{}", if user.is_admin {"[ADMIN]"} else {""});
         println!("{}", last_output);
         io::stdin().read_line(&mut buffer).unwrap();
 
-        // deposit value - пополнить баланс на value
-        // add_product title - Добавить продукт title в корзину
-        // delete_product title - Убрать продукт title из корзины
-        // order_products - заказать товары из корзины
-        // get_ordering_history - получить историю заказов
-        // админ:
-        // db_add_product title cost - добавить продукт в базу данных
-        // db_delete_product title - стереть продукт из базы данных
-        // db_edit_product title - запуск подпрограммы редактирования продукта по title
         let mut whitespace = buffer.split_whitespace();
         let cmd = whitespace.next().unwrap().to_string();
         if cmd == "login".to_string() {
@@ -115,6 +106,27 @@ fn main() {
         }
         else if cmd == "exit".to_string() {
             break;
+        }
+        else if cmd == "help".to_string() {
+            last_output = "login - открыть подпрограмму программу логина
+unlogin - разлогиниться
+op - перейти в админ-режим или выйти из него
+exit - выйти из StoreCLI
+deposit value - пополнить баланс на value
+credits - просмотреть авторов
+add_product title - Добавить продукт title в корзину
+delete_product title - Убрать продукт title из корзины
+order_products - заказать товары из корзины
+get_ordering_history - получить историю заказов
+админ:
+db_add_product title cost - добавить продукт в базу данных
+db_delete_product title - стереть продукт из базы данных
+db_edit_product title - запуск подпрограммы редактирования продукта по title".to_string();
+        }
+        else if cmd == "credits".to_string() {
+            last_output = "Авторы:
+Ховрин Дмитрий Николаевич
+Игорь Ротарь".to_string();
         }
         else if cmd == "deposit".to_string() {
             if !user.is_loginned {
@@ -181,19 +193,24 @@ fn main() {
             if user.get_balance() > total_cost {
                 user.place_an_order(basket.clone());
                 user.pay(total_cost);
+                let mut exiting: bool = false;
                 for id in 0..basket.get_storage_count() {
-                    println!("{id:?}");
                     let storage_0 = basket.get_storage(id);
-                    println!("{:?}", storage_0);
                     let uid = user.get_product_db().get_uid_by_title(
                         storage_0.get_product().get_title()
                     );
                     let mut storage: ProductStorage = match user.get_product(uid) {
                         Some(value) => value,
-                        None => panic!("uid: {uid:?}"),
+                        None => {
+                            println!("Error");
+                            exiting = true;
+                            break;
+                        },
                     };
-                    storage.count -= basket.get_storage(id).get_count();
-                    user.update_product(&storage.clone(), uid);
+                    if !exiting {
+                        storage.count -= basket.get_storage(id).get_count();
+                        user.update_product(&storage.clone(), uid);
+                    }
                 }
                 last_output = "Order placed".to_string();
             }
