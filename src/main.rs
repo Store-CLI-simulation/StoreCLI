@@ -12,10 +12,11 @@ use std::str::FromStr;
 use crate::{product::Product, product_storage::ProductStorage};
 trait ClientTrait {
     type OrderTraitType;
+    type BasketTraitType: BasketTrait;
     fn login(&mut self, login: String, password: String);
     fn exit(&mut self);
 
-    fn place_an_order(&self) -> Self::OrderTraitType;
+    fn place_an_order(&mut self, basket: <Self as ClientTrait>::BasketTraitType);
     fn get_order_hystory(&self) -> Vec<Self::OrderTraitType>;
 
     fn deposit_balance(&mut self, count: f32);
@@ -126,11 +127,11 @@ fn main() {
         }
         else if cmd == "get_balance".to_string() {
             if !user.is_loginned {
-                last_output = "Login first,please".to_string();
+                last_output = "Login first, please".to_string();
                 buffer = "".to_string();
                 continue;
             }
-            println!("Balance: {}", user.get_balance());
+            println!("Balance: {}$", user.get_balance());
         }
         else if cmd == "add_product".to_string() {
             if !user.is_loginned{
@@ -151,8 +152,8 @@ fn main() {
                 continue;
             }
             let title: String = whitespace.next().unwrap().to_string();
-            for product_id in 0..basket.get_product_count() {
-                if basket.get_product(product_id).get_product().get_title() == title {
+            for product_id in 0..basket.get_storage_count() {
+                if basket.get_storage(product_id).get_product().get_title() == title {
                     basket.delete_product(product_id);
                     last_output = "product added to basket".to_string();
                     break;
@@ -165,15 +166,32 @@ fn main() {
                 buffer = "".to_string();
                 continue;
             }
-            for product_id in 0..basket.get_product_count() {
+            for product_id in 0..basket.get_storage_count() {
                 last_output = "".to_string();
-                last_output = format!("{0}\n{1} \tcost: {2}", last_output,
-                    basket.get_product(product_id).get_product().get_title(),
-                    basket.get_product(product_id).get_product().get_cost()).to_string();
+                last_output = format!("{0}\n{1} \tcost: {2}$", last_output,
+                    basket.get_storage(product_id).get_product().get_title(),
+                    basket.get_storage(product_id).get_product().get_cost()).to_string();
             }
         }
         else if cmd == "order_products".to_string() {
-            
+            let mut total_cost: f32 = 0.0;
+            for id in 0..basket.get_storage_count() {
+                total_cost += basket.get_storage(id).get_count() * basket.get_storage(id).get_product().get_cost();
+            }
+            if user.get_balance() > total_cost {
+                user.place_an_order(basket.clone());
+                user.pay(total_cost);
+                for id in 0..basket.get_storage_count() {
+                    user.get_product(
+                        user.get_product_db().get_uid_by_title(
+                            basket.get_storage(id).get_product().get_title()
+                        )).unwrap().count -= basket.get_storage(id).get_count();
+                }
+                last_output = "Order placed".to_string();
+            }
+            else {
+                last_output = "Not enough money for purpose".to_string();
+            }
         }
         else if cmd == "get_ordering_history".to_string() {
             
