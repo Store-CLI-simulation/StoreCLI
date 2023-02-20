@@ -170,12 +170,73 @@ fn main() {
                 println!("Product added!\nUID: {uid}");
             }
             else if cmd == "db_delete_product".to_string() {
-                let title = whitespace.next().unwrap().to_string();
+                let title: String = whitespace.next().unwrap().to_string();
                 let uid: usize = user.get_product_db().get_uid_by_title(title);
                 user.remove_product(uid);
             }
             else if cmd == "db_edit_product".to_string() {
-            
+                let title: String = match whitespace.next() {
+                    Some(value) => value,
+                    None => {
+                        println!("No title of editing product");
+                        buffer = "".to_string();
+                        continue;
+                    },
+                }.to_string();
+                let uid: usize = user.get_product_db().get_uid_by_title(title);
+
+                let mut selected_product: Product = user.get_product(uid).unwrap();
+
+                let mut subbuffer: String = String::new();
+                loop {
+                    println!("{0}[H{0}[J", 27 as char);
+                    println!("Product title: {}", selected_product.get_title());
+                    println!("Product cost: {}", selected_product.get_cost());
+                    println!("What change? ([T]itle/[C]ost)");
+                    println!("[E for exit]\n[A for Apply]");
+                    io::stdin().read_line(&mut subbuffer).unwrap();
+                    if subbuffer.trim() == "T".to_string() {
+                        loop {
+                            subbuffer = "".to_string();
+                            println!("{0}[H{0}[J", 27 as char);
+                            println!("[E to stop]");
+                            println!("New Title:");
+                            match io::stdin().read_line(&mut subbuffer) {
+                                Ok(_) => {
+                                    break;
+                                },
+                                Err(_) => continue,
+                            }
+                        }
+                        selected_product.title = subbuffer.clone().trim().to_string();
+                        subbuffer = "".to_string();
+                    }
+                    else if subbuffer.trim() == "C".to_string() {
+                        loop {
+                            subbuffer = "".to_string();
+                            println!("{0}[H{0}[J", 27 as char);
+                            println!("[E to stop]");
+                            println!("New Cost:");
+                            match io::stdin().read_line(&mut subbuffer) {
+                                Ok(_) => {
+                                    break;
+                                },
+                                Err(_) => continue,
+                            }
+                        }
+                        selected_product.cost = f32::from_str(&subbuffer.trim().to_string()).unwrap();
+                        subbuffer = "".to_string();
+                    }
+                    else if subbuffer.trim() == "E".to_string() {
+                        println!("Exiting");
+                        break;
+                    }
+                    else if subbuffer.trim() == "A".to_string() {
+                        println!("Applying changes");
+                        user.update_product(&selected_product, uid);
+                        break;
+                    }
+                }
             }
         }
         buffer = "".to_string();
