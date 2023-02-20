@@ -17,7 +17,7 @@ trait ClientTrait {
     fn exit(&mut self);
 
     fn place_an_order(&mut self, basket: <Self as ClientTrait>::BasketTraitType);
-    fn get_order_hystory(&self) -> Vec<Self::OrderTraitType>;
+    fn get_order_history(&self) -> Vec<Self::OrderTraitType>;
 
     fn deposit_balance(&mut self, count: f32);
     fn get_balance(&self) -> f32;
@@ -202,9 +202,9 @@ fn main() {
             }
         }
         else if cmd == "get_ordering_history".to_string() {
-            let hystory: Vec<order::Order> = user.get_order_hystory();
+            let history: Vec<order::Order> = user.get_order_history();
             last_output = "".to_string();
-            for order in hystory {
+            for order in history {
                 let basket: Basket = order.products;
 
                 let mut total_cost: f32 = 0.0;

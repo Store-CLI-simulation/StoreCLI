@@ -11,7 +11,7 @@ pub struct Client {
     balance: f32,
     login: String,
     password: String,
-    order_hystory: Vec<Order>,
+    order_history: Vec<Order>,
     product_db: ProductDB
 }
 
@@ -23,7 +23,7 @@ impl Client {
             balance: 0.0f32,
             login: "".to_string(),
             password: "".to_string(),
-            order_hystory: Default::default(),
+            order_history: Default::default(),
             product_db: ProductDB::new(filepath),
         }
     }
@@ -34,7 +34,7 @@ impl Client {
             balance: 0.0f32,
             login: login,
             password: password,
-            order_hystory: Default::default(),
+            order_history: Default::default(),
             product_db: ProductDB::new(filepath)
         }
     }
@@ -62,11 +62,11 @@ impl ClientTrait for Client {
 
     fn place_an_order(&mut self, basket: Basket) {
         let order: Order = Order{products: basket};
-        self.order_hystory.push(order);
+        self.order_history.push(order);
     }
 
-    fn get_order_hystory(&self) -> Vec<Self::OrderTraitType> {
-        self.order_hystory.clone()
+    fn get_order_history(&self) -> Vec<Self::OrderTraitType> {
+        self.order_history.clone()
     }
 
     fn deposit_balance(&mut self, count: f32) {
