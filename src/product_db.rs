@@ -26,7 +26,7 @@ impl ProductDB {
                 title TEXT UNIQUE NOT NULL,
                 cost REAL NOT NULL,
                 count REAL NOT NULL
-            )",
+            );",
             ())
             .unwrap();
 

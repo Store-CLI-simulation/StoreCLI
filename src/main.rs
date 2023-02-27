@@ -3,6 +3,7 @@ pub(crate) mod client;
 pub(crate) mod order;
 pub(crate) mod basket;
 pub(crate) mod product_db;
+pub(crate) mod user_db;
 pub(crate) mod product_storage;
 use std::io;
 use basket::Basket;
@@ -21,6 +22,15 @@ trait ClientTrait {
 
     fn deposit_balance(&mut self, count: f32);
     fn get_balance(&self) -> f32;
+}
+
+trait UserDBTrait {
+    fn add_user(&mut self, username: String, password: String);
+    fn ban_user(&mut self, username: String);
+    fn is_user_exists(&self, username: String) -> bool;
+    fn get_password(&mut self, username: String) -> String;
+    fn get_balance(&self, username: String) -> f32;
+    fn set_balance(&mut self, username: String, balance: f32);
 }
 
 trait ProductDBTrait {
@@ -72,42 +82,85 @@ fn main() {
     let mut basket: Basket = Basket::new();
     let mut buffer = String::new();
     let mut last_output: String = "".to_string();
-    loop {
+    'main: loop {
         print!("[{} {}$]", username, user.get_balance());
-        println!("{}", if user.is_admin {"[ADMIN]"} else {""});
+        println!("{}", if user.is_admin {format!("{0}\x1b[101m [ADMIN] {0}[49m", 0x1B as char)} else {"".to_string()});
         println!("{}", last_output);
         io::stdin().read_line(&mut buffer).unwrap();
 
         let mut whitespace = buffer.split_whitespace();
         let cmd = whitespace.next().unwrap().to_string();
-        if cmd == "login".to_string() {
-            username = String::new();
-            let mut password: String = String::new();
+        if cmd.trim() == "login" {
+            username = "".to_string();
+            let mut password: String = "".to_string();
             println!("login:");
             io::stdin().read_line(&mut username).unwrap();
             username = username.trim().to_string();
+            if !user.user_db.is_user_exists(username.clone()) {
+                println!("User not exists");
+                username = "".to_string();
+                buffer = "".to_string();
+                continue 'main;
+            }
             println!("password:");
             io::stdin().read_line(&mut password).unwrap();
-            user = Client::new_loginned(username.clone(), password.trim().to_string(), "database.db".to_string());
-            println!("loginned!!!");
+            if user.user_db.get_password(username.clone()) == password {
+                user = Client::new_loginned(username.clone(), password.trim().to_string(), "database.db".to_string());
+                println!("loginned!!!");
+                user.deposit_balance(user.user_db.get_balance(username.clone()));
+            } else {
+                println!("Password is wrong");
+                buffer = "".to_string();
+                continue 'main;
+            }
         }
-        else if cmd == "op".to_string() {
+        else if cmd.trim() == "register" {
+            
+            username = "".to_string();
+            let mut password: String = "".to_string();
+            'try_get_login: loop {
+                println!("login:");
+                match io::stdin().read_line(&mut username) {
+                    Ok(_) => {
+                        if user.user_db.is_user_exists(username.clone()) {
+                            println!("Login is used");
+                            continue 'try_get_login
+                        }
+                        else {
+                            break 'try_get_login
+                        };
+                    },
+                    Err(_) => continue 'try_get_login,
+                };
+            }
+            'try_get_password: loop {
+                println!("password:");
+                match io::stdin().read_line(&mut password) {
+                    Ok(_) => break 'try_get_password,
+                    Err(_) => continue 'try_get_password,
+                };
+            }
+
+            user.user_db.add_user(username.trim().to_string(), password.trim().to_string());
+            user.login(username.clone(), password.clone());
+        }
+        else if cmd.trim() == "op" {
             println!("opping");
             if user.is_loginned {
                 user.is_admin = !user.is_admin;
-                last_output = "You are opped".to_string();
+                last_output = format!("You are {}opped", if user.is_admin {""} else {"de"}).to_string();
             } else {
                 last_output = "Login first, please".to_string();
             }
         }
-        else if cmd == "unlogin".to_string() {
+        else if cmd.trim() == "unlogin" {
             if user.is_loginned {user = Client::new("database.db".to_string()); username = "".to_string();}
             else {last_output = "Login first, please".to_string()};
         }
-        else if cmd == "exit".to_string() {
+        else if cmd.trim() == "exit" {
             break;
         }
-        else if cmd == "help".to_string() {
+        else if cmd.trim() == "help" {
             last_output = "login - открыть подпрограмму программу логина
 unlogin - разлогиниться
 op - перейти в админ-режим или выйти из него
@@ -123,33 +176,33 @@ db_add_product title cost - добавить продукт в базу данн
 db_delete_product title - стереть продукт из базы данных
 db_edit_product title - запуск подпрограммы редактирования продукта по title".to_string();
         }
-        else if cmd == "credits".to_string() {
+        else if cmd.trim() == "credits" {
             last_output = "Авторы:
 Ховрин Дмитрий Николаевич
 Игорь Ротарь".to_string();
         }
-        else if cmd == "deposit".to_string() {
+        else if cmd.trim() == "deposit" {
             if !user.is_loginned {
                 last_output = "Login first,please".to_string();
                 buffer = "".to_string();
-                continue;
+                continue 'main;
             }
             user.deposit_balance(f32::from_str(whitespace.next().unwrap()).unwrap());
             last_output = format!("Balance now: {}$", user.get_balance()).to_string();
         }
-        else if cmd == "get_balance".to_string() {
+        else if cmd.trim() == "get_balance" {
             if !user.is_loginned {
                 last_output = "Login first, please".to_string();
                 buffer = "".to_string();
-                continue;
+                continue 'main;
             }
             last_output = format!("Balance now: {}$", user.get_balance()).to_string();
         }
-        else if cmd == "add_product".to_string() {
+        else if cmd.trim() == "add_product" {
             if !user.is_loginned{
                 last_output = "Please, login first!".to_string();
                 buffer = "".to_string();
-                continue;
+                continue 'main;
             }
             let product_title: String = whitespace.next().unwrap().to_string();
             let product_uid: usize = user.get_product_db().get_uid_by_title(product_title);
@@ -157,26 +210,26 @@ db_edit_product title - запуск подпрограммы редактиро
             basket.add_product(ProductStorage {product: user.get_product_db().get_product(product_uid).get_product(), count: 1.0});
             last_output = "Product added to basket".to_string();
         }
-        else if cmd == "delete_product".to_string() {
+        else if cmd.trim() == "delete_product" {
             if !user.is_loginned{
                 last_output = "Please, login first!".to_string();
                 buffer = "".to_string();
                 continue;
             }
             let title: String = whitespace.next().unwrap().to_string();
-            for product_id in 0..basket.get_storage_count() {
+            'product_list: for product_id in 0..basket.get_storage_count() {
                 if basket.get_storage(product_id).get_product().get_title() == title {
                     basket.delete_product(product_id);
                     last_output = "product added to basket".to_string();
-                    break;
+                    break 'product_list;
                 }
             }
         }
-        else if cmd == "get_products".to_string() {
+        else if cmd.trim() == "get_products" {
             if !user.is_loginned{
                 last_output = "Please, login first!".to_string();
                 buffer = "".to_string();
-                continue;
+                continue 'main;
             }
             last_output = "".to_string();
             for product_id in 0..basket.get_storage_count() {
@@ -185,7 +238,7 @@ db_edit_product title - запуск подпрограммы редактиро
                     basket.get_storage(product_id).get_product().get_cost()).to_string();
             }
         }
-        else if cmd == "order_products".to_string() {
+        else if cmd.trim() == "order_products" {
             let mut total_cost: f32 = 0.0;
             for id in 0..basket.get_storage_count() {
                 total_cost += basket.get_storage(id).get_count() * basket.get_storage(id).get_product().get_cost();
@@ -193,8 +246,7 @@ db_edit_product title - запуск подпрограммы редактиро
             if user.get_balance() > total_cost {
                 user.place_an_order(basket.clone());
                 user.pay(total_cost);
-                let mut exiting: bool = false;
-                for id in 0..basket.get_storage_count() {
+                'cost_counting: for id in 0..basket.get_storage_count() {
                     let storage_0 = basket.get_storage(id);
                     let uid = user.get_product_db().get_uid_by_title(
                         storage_0.get_product().get_title()
@@ -203,14 +255,11 @@ db_edit_product title - запуск подпрограммы редактиро
                         Some(value) => value,
                         None => {
                             println!("Error");
-                            exiting = true;
-                            break;
+                            break 'cost_counting;
                         },
                     };
-                    if !exiting {
-                        storage.count -= basket.get_storage(id).get_count();
-                        user.update_product(&storage.clone(), uid);
-                    }
+                    storage.count -= basket.get_storage(id).get_count();
+                    user.update_product(&storage.clone(), uid);
                 }
                 last_output = "Order placed".to_string();
             }
@@ -218,7 +267,7 @@ db_edit_product title - запуск подпрограммы редактиро
                 last_output = "Not enough money for purpose".to_string();
             }
         }
-        else if cmd == "get_ordering_history".to_string() {
+        else if cmd.trim() == "get_ordering_history" {
             let history: Vec<order::Order> = user.get_order_history();
             last_output = "".to_string();
             for order in history {
@@ -233,7 +282,7 @@ db_edit_product title - запуск подпрограммы редактиро
             }
         }
         if user.is_admin {
-            if cmd == "db_add_product".to_string() {
+            if cmd.trim() == "db_add_product" {
                 let title: String = whitespace.next().unwrap().to_string();
                 let cost: f32 = f32::from_str(whitespace.next().unwrap()).unwrap();
 
@@ -242,13 +291,13 @@ db_edit_product title - запуск подпрограммы редактиро
                 let uid = user.add_product(&new_product);
                 last_output = format!("Product added!\nUID: {uid}").to_string();
             }
-            else if cmd == "db_delete_product".to_string() {
+            else if cmd.trim() == "db_delete_product" {
                 let title: String = whitespace.next().unwrap().to_string();
                 let uid: usize = user.get_product_db().get_uid_by_title(title);
                 user.remove_product(uid);
                 last_output = "Product removed!".to_string();
             }
-            else if cmd == "db_edit_product".to_string() {
+            else if cmd.trim() == "db_edit_product" {
                 let title: String = match whitespace.next() {
                     Some(value) => value,
                     None => {
@@ -262,7 +311,7 @@ db_edit_product title - запуск подпрограммы редактиро
                 let mut selected_product_storage: ProductStorage = user.get_product(uid).unwrap();
 
                 let mut subbuffer: String = String::new();
-                loop {
+                'db_edit_product_main_menu: loop {
                     println!("{0}[H{0}[J", 27 as char);
                     println!("Product [T]itle: {}", selected_product_storage.get_product().get_title());
                     println!("Product [C]ost: {}", selected_product_storage.get_product().get_cost());
@@ -271,16 +320,21 @@ db_edit_product title - запуск подпрограммы редактиро
                     println!("What change?");
                     io::stdin().read_line(&mut subbuffer).unwrap();
                     if subbuffer.trim() == "T".to_string() {
-                        loop {
+                        'db_edit_product_get_new_title: loop {
                             subbuffer = "".to_string();
                             println!("{0}[H{0}[J", 27 as char);
                             println!("[E to stop]");
                             println!("New Title:");
                             match io::stdin().read_line(&mut subbuffer) {
                                 Ok(_) => {
-                                    break;
+                                    if subbuffer.trim() == "E"{
+                                        continue 'db_edit_product_main_menu;
+                                    }
+                                    else {
+                                        break 'db_edit_product_get_new_title;
+                                    }
                                 },
-                                Err(_) => continue,
+                                Err(_) => continue 'db_edit_product_get_new_title
                             }
                         }
                         let mut product: Product = selected_product_storage.get_product();
@@ -289,16 +343,21 @@ db_edit_product title - запуск подпрограммы редактиро
                         subbuffer = "".to_string();
                     }
                     else if subbuffer.trim() == "C".to_string() {
-                        loop {
+                        'db_edit_product_get_new_cost: loop {
                             subbuffer = "".to_string();
                             println!("{0}[H{0}[J", 27 as char);
                             println!("[E to stop]");
                             println!("New Cost:");
                             match io::stdin().read_line(&mut subbuffer) {
                                 Ok(_) => {
-                                    break;
+                                    if subbuffer.trim() == "E" {
+                                        continue 'db_edit_product_main_menu;
+                                    }
+                                    else {
+                                        break 'db_edit_product_get_new_cost;
+                                    }
                                 },
-                                Err(_) => continue,
+                                Err(_) => continue 'db_edit_product_get_new_cost,
                             }
                         }
                         let mut product: Product = selected_product_storage.get_product();
@@ -307,16 +366,21 @@ db_edit_product title - запуск подпрограммы редактиро
                         subbuffer = "".to_string();
                     }
                     else if subbuffer.trim().to_lowercase().to_string() == "count".to_string() {
-                        loop {
+                        'db_edit_product_get_new_count: loop {
                             subbuffer = "".to_string();
                             println!("{0}[H{0}[J", 27 as char);
                             println!("[E to stop]");
                             println!("New Count:");
                             match io::stdin().read_line(&mut subbuffer) {
                                 Ok(_) => {
-                                    break;
+                                    if subbuffer.trim() == "E" {
+                                        continue 'db_edit_product_main_menu;
+                                    } 
+                                    else {
+                                        break 'db_edit_product_get_new_count;
+                                    }
                                 },
-                                Err(_) => continue,
+                                Err(_) => continue 'db_edit_product_get_new_count,
                             }
                         }
                         selected_product_storage.count = f32::from_str(&subbuffer.trim().to_string()).unwrap();
@@ -325,12 +389,12 @@ db_edit_product title - запуск подпрограммы редактиро
                     }
                     else if subbuffer.trim() == "E".to_string() {
                         println!("Exiting");
-                        break;
+                        break 'db_edit_product_main_menu;
                     }
                     else if subbuffer.trim() == "A".to_string() {
                         println!("Applying changes");
                         user.update_product(&selected_product_storage, uid);
-                        break;
+                        break 'db_edit_product_main_menu;
                     }
                 }
             }

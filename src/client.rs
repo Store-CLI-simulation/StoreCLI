@@ -1,6 +1,7 @@
 use crate::basket::Basket;
 use crate::product_storage::ProductStorage;
-use crate::{AdminTrait, ClientTrait, ProductDBTrait};
+use crate::user_db::UserDB;
+use crate::{AdminTrait, ClientTrait, ProductDBTrait, UserDBTrait};
 use crate::order::Order;
 use crate::product::Product as CLIProduct;
 use crate::product_db::ProductDB;
@@ -12,7 +13,8 @@ pub struct Client {
     login: String,
     password: String,
     order_history: Vec<Order>,
-    product_db: ProductDB
+    product_db: ProductDB,
+    pub user_db: UserDB
 }
 
 impl Client {
@@ -24,7 +26,8 @@ impl Client {
             login: "".to_string(),
             password: "".to_string(),
             order_history: Default::default(),
-            product_db: ProductDB::new(filepath),
+            product_db: ProductDB::new(filepath.clone()),
+            user_db: UserDB::new(filepath.clone())
         }
     }
     pub fn new_loginned(login: String, password: String, filepath: String) -> Self {
@@ -35,7 +38,8 @@ impl Client {
             login: login,
             password: password,
             order_history: Default::default(),
-            product_db: ProductDB::new(filepath)
+            product_db: ProductDB::new(filepath.clone()),
+            user_db: UserDB::new(filepath.clone())
         }
     }
     pub fn get_product_db(&self) -> ProductDB {
@@ -43,6 +47,7 @@ impl Client {
     }
     pub fn pay(&mut self, cost: f32) {
         self.balance -= cost;
+        self.user_db.set_balance(self.login.clone(), self.balance);
     }
 }
 
@@ -71,6 +76,7 @@ impl ClientTrait for Client {
 
     fn deposit_balance(&mut self, count: f32) {
         self.balance += count;
+        self.user_db.set_balance(self.login.clone(), self.balance);
     }
 
     fn get_balance(&self) -> f32 {
