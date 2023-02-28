@@ -28,9 +28,12 @@ trait UserDBTrait {
     fn add_user(&mut self, username: String, password: String);
     fn ban_user(&mut self, username: String);
     fn is_user_exists(&self, username: String) -> bool;
-    fn get_password(&mut self, username: String) -> String;
+    fn get_password(&self, username: String) -> String;
     fn get_balance(&self, username: String) -> f32;
     fn set_balance(&mut self, username: String, balance: f32);
+
+    fn set_admin(&mut self, username: String, admin: usize);
+    fn get_admin(&self, username: String) -> usize;
 }
 
 trait ProductDBTrait {
@@ -76,42 +79,62 @@ trait BasketTrait {
 }
 
 fn main() {
-    println!("{0}[H{0}[J", 27 as char);
+    println!("{0}[H{0}[J", 0x1B as char);
     let mut user: Client = Client::new("database.db".to_string());
     let mut username: String = "".to_string();
     let mut basket: Basket = Basket::new();
-    let mut buffer = String::new();
+    let mut buffer: String = String::new();
     let mut last_output: String = "".to_string();
     'main: loop {
         print!("[{} {}$]", username, user.get_balance());
-        println!("{}", if user.is_admin {format!("{0}\x1b[101m [ADMIN] {0}[49m", 0x1B as char)} else {"".to_string()});
+        println!("{}", if user.is_admin {" \x1b[101m[ADMIN]\x1b[49m ".to_string()} else {"".to_string()});
         println!("{}", last_output);
         io::stdin().read_line(&mut buffer).unwrap();
-
-        let mut whitespace = buffer.split_whitespace();
+        let b_copy = buffer.clone();
+        let mut whitespace = b_copy
+                                                    .split_whitespace();
         let cmd = whitespace.next().unwrap().to_string();
         if cmd.trim() == "login" {
             username = "".to_string();
             let mut password: String = "".to_string();
             println!("login:");
-            io::stdin().read_line(&mut username).unwrap();
+            io::stdin()
+                    .read_line(&mut username)
+                    .unwrap();
             username = username.trim().to_string();
             if !user.user_db.is_user_exists(username.clone()) {
+                println!("{}", user.user_db.is_user_exists(username.clone()));
                 println!("User not exists");
                 username = "".to_string();
                 buffer = "".to_string();
                 continue 'main;
             }
             println!("password:");
-            io::stdin().read_line(&mut password).unwrap();
-            if user.user_db.get_password(username.clone()) == password {
-                user = Client::new_loginned(username.clone(), password.trim().to_string(), "database.db".to_string());
-                println!("loginned!!!");
-                user.deposit_balance(user.user_db.get_balance(username.clone()));
-            } else {
-                println!("Password is wrong");
-                buffer = "".to_string();
-                continue 'main;
+            'try_get_password: for _ in 0..3 {
+                io::stdin()
+                        .read_line(&mut password)
+                        .unwrap();
+                if user.user_db.get_password(username.clone()) == password.trim().to_string() {
+                    user = Client::new_loginned(username.clone(), password.trim().to_string(), "database.db".to_string());
+                    println!("loginned!!!");
+                    let balance = user.user_db.get_balance(username.clone()).clone();
+                    if balance > 0.0f32{
+                        user
+                            .deposit_balance(
+                                balance
+                            );
+                    }
+                    user.is_admin = if user.user_db.get_admin(username.clone()) == 0 {false} else {true};
+
+                    break 'try_get_password;
+                } else {
+                    println!("Password is wrong");
+                    // buffer = "".to_string();
+                    continue 'try_get_password;
+                }
+            }
+            if !user.is_loginned {
+                username = "".to_string();
             }
         }
         else if cmd.trim() == "register" {
@@ -133,6 +156,7 @@ fn main() {
                     Err(_) => continue 'try_get_login,
                 };
             }
+            username = username.trim().to_string();
             'try_get_password: loop {
                 println!("password:");
                 match io::stdin().read_line(&mut password) {
@@ -140,15 +164,23 @@ fn main() {
                     Err(_) => continue 'try_get_password,
                 };
             }
-
-            user.user_db.add_user(username.trim().to_string(), password.trim().to_string());
-            user.login(username.clone(), password.clone());
+            password = password.trim().to_string();
+            println!("uname: {} pass: {}", username.clone(), password.clone());
+            user
+                .user_db
+                .add_user(username.clone(), password.clone());
+            user
+                .login(username.clone(), password.clone());
+            io::stdin().read_line(&mut buffer).unwrap();
         }
         else if cmd.trim() == "op" {
             println!("opping");
             if user.is_loginned {
                 user.is_admin = !user.is_admin;
                 last_output = format!("You are {}opped", if user.is_admin {""} else {"de"}).to_string();
+                user
+                    .user_db
+                    .set_admin(username.clone(), if user.is_admin {1} else {0});
             } else {
                 last_output = "Login first, please".to_string();
             }
@@ -158,7 +190,7 @@ fn main() {
             else {last_output = "Login first, please".to_string()};
         }
         else if cmd.trim() == "exit" {
-            break;
+            break 'main;
         }
         else if cmd.trim() == "help" {
             last_output = "login - открыть подпрограмму программу логина
@@ -262,6 +294,7 @@ db_edit_product title - запуск подпрограммы редактиро
                     user.update_product(&storage.clone(), uid);
                 }
                 last_output = "Order placed".to_string();
+                basket = Basket::new();
             }
             else {
                 last_output = "Not enough money for purpose".to_string();
