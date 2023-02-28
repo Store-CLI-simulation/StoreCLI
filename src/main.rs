@@ -294,6 +294,7 @@ db_edit_product title - запуск подпрограммы редактиро
                     user.update_product(&storage.clone(), uid);
                 }
                 last_output = "Order placed".to_string();
+                basket = Basket::new();
             }
             else {
                 last_output = "Not enough money for purpose".to_string();
